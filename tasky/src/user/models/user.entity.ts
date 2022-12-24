@@ -24,7 +24,7 @@ export class UserEntity{
              enum: GenderEnum,})
     gender: GenderEnum;
 
-    @Column()
+    @Column({select:false})
     password: string;
     
     @ManyToOne(()=>RoleEntity, (role)=>role.users)

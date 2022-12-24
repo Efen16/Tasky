@@ -1,12 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, TreeLevelColumn } from 'typeorm';
 import { CreateUserDto } from './dto/createUser.dto';
 import { RoleEntity } from './models/role.entity';
 import { UserEntity } from './models/user.entity';
 import {sign} from 'jsonwebtoken'
 import { userResponse } from './types/userResponse.intefrace';
 import { Http2ServerRequest } from 'http2';
+import { LoginUserDto } from './dto/loginUser.dto';
+import {compare} from 'bcrypt'
 
 @Injectable()
 export class UserService {
@@ -62,6 +64,28 @@ export class UserService {
                 token: this.generateJwt(user)
             }
         }
+    }
+
+    async login(loginUserDto: LoginUserDto):Promise<UserEntity>{
+        const user = await this.userRepository.findOne({
+            where: {email: loginUserDto.email},
+             relations: ["role"],
+             select:["id","firstName","lastName","password",
+                     "gender","phone","email"]
+         });
+
+         console.log(user);
+        if(!user){
+            throw new HttpException('Wrong email', HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        const passwordCheck = await compare(loginUserDto.password, user.password);
+        if(!passwordCheck){
+            throw new HttpException("Wrong password", HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+        
+        delete user.password;
+        return user;
     }
 
 
