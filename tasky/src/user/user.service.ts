@@ -9,6 +9,7 @@ import { userResponse } from './types/userResponse.intefrace';
 import { Http2ServerRequest } from 'http2';
 import { LoginUserDto } from './dto/loginUser.dto';
 import {compare} from 'bcrypt'
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
@@ -18,9 +19,10 @@ export class UserService {
         private readonly userRepository: Repository<UserEntity>,
         @InjectRepository(RoleEntity)
         private readonly roleRepository: Repository<RoleEntity>,
+        private readonly jwtService: JwtService
       ) {}
 
-    
+
     async createUser(createUserDto: CreateUserDto): Promise<UserEntity>{
         const newUser = new UserEntity();
         const roleId:number = 1;
@@ -49,24 +51,19 @@ export class UserService {
     }
 
 
-    generateJwt(user:UserEntity): string{
-        return sign({
-            id: user.id,
-            email: user.email,
-        },"SECRET");
-        //TO DO CREATE ENV FILE AND SWITCH TO APSOLUTE PATH
+
+    
+
+    // Idea is that front will store this token in local storage/cookie 
+    // and attach it to every request
+    buildUserResponse(user: UserEntity): string {
+        return this.jwtService.sign({
+            sub: user.id,
+            role: user.role.name
+        })
     }
 
-    buildUserResponse(user: UserEntity): userResponse {
-        return {
-            user: {
-                ...user,
-                token: this.generateJwt(user)
-            }
-        }
-    }
-
-    async login(loginUserDto: LoginUserDto):Promise<UserEntity>{
+    async login(loginUserDto: LoginUserDto):Promise<string>{
         const user = await this.userRepository.findOne({
             where: {email: loginUserDto.email},
              relations: ["role"],
@@ -85,8 +82,10 @@ export class UserService {
         }
         
         delete user.password;
-        return user;
+        return this.buildUserResponse(user);
     }
+
+
 
 
 }
