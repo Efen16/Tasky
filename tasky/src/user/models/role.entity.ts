@@ -17,6 +17,6 @@ export class RoleEntity{
     name:RoleNameEnum;
 
 
-    @OneToMany(() => UserEntity, (user) => user.role)
+    @OneToMany(() => UserEntity, (users) => users.role)
     users: UserEntity[]
 }

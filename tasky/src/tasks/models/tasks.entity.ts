@@ -1,3 +1,4 @@
+import { ProjectsEntity } from "src/projects/models/projects.entity";
 import { UserEntity } from "src/user/models/user.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { PriorityEnum } from "../types/priority.enum";
@@ -26,6 +27,8 @@ export class TasksEntity{
     @ManyToOne(()=>UserEntity, (createdBy)=>createdBy.tasks)
     createdBy: UserEntity
 
+    @ManyToOne(()=>ProjectsEntity, (project) => project.tasks)
+    project: ProjectsEntity;
 
 
 }

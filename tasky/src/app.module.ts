@@ -5,9 +5,10 @@ import { typeOrmConfig } from './config/typeorm.config';
 import { RolesGuard } from './user/guards/roles.guard';
 import { UserModule } from './user/user.module';
 import { TasksModule } from './tasks/tasks.module';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
-  imports: [TypeOrmModule.forRoot(typeOrmConfig), UserModule, TasksModule],
+  imports: [TypeOrmModule.forRoot(typeOrmConfig), UserModule, TasksModule, ProjectsModule],
 })
 export class AppModule {
   
