@@ -5,7 +5,7 @@ import { CreateUserDto } from './dto/createUser.dto';
 import { RoleEntity } from './models/role.entity';
 import { UserEntity } from './models/user.entity';
 import {sign} from 'jsonwebtoken'
-import { userResponse } from './types/userResponse.intefrace';
+
 import { Http2ServerRequest } from 'http2';
 import { LoginUserDto } from './dto/loginUser.dto';
 import {compare} from 'bcrypt'
@@ -23,7 +23,7 @@ export class UserService {
       ) {}
 
 
-    async createUser(createUserDto: CreateUserDto): Promise<UserEntity>{
+    async createUser(createUserDto: CreateUserDto): Promise<string>{
         const newUser = new UserEntity();
         const roleId:number = 1;
         Object.assign(newUser,createUserDto);
@@ -47,7 +47,8 @@ export class UserService {
         });
         newUser.role = role;
         
-        return await this.userRepository.save(newUser);
+        const user = await this.userRepository.save(newUser);
+        return this.buildUserResponse(user);
     }
 
 

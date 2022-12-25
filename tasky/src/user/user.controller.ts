@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Post, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, UsePipes, ValidationPipe, Request } from '@nestjs/common';
+import { Roles } from './decorators/roles.decorator';
 import { CreateUserDto } from './dto/createUser.dto';
 import { LoginUserDto } from './dto/loginUser.dto';
 import { JwtAuthGuard } from './guards/jwt.guard';
+import { RolesGuard } from './guards/roles.guard';
 import { UserEntity } from './models/user.entity';
-import { userResponse } from './types/userResponse.intefrace';
+import { RoleNameEnum } from './types/role.enum';
 import { UserService } from './user.service';
 
 @Controller()
@@ -14,8 +16,7 @@ export class UserController {
     @Post("signup")
     @UsePipes(new ValidationPipe())
     async createUser(@Body() createUserDto:CreateUserDto): Promise<string>{
-        const user = await this.userService.createUser(createUserDto);
-        return this.userService.buildUserResponse(user);
+        return await this.userService.createUser(createUserDto);
     }
 
     @Post("login")
@@ -24,6 +25,16 @@ export class UserController {
         return await this.userService.login(loginUserDto);
         
     }
+
+    // @Roles(RoleNameEnum.ADMIN, RoleNameEnum.MANAGER)
+
+    // @UseGuards(JwtAuthGuard, RolesGuard)
+    // @Get()
+    // async getUser(@Request() req){
+    //     console.log(req.user);
+    // }
+
+   
 
 
 

@@ -1,5 +1,5 @@
 import { BeforeInsert, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { GenderEnum } from "./gender.enum";
+import { GenderEnum } from "../types/gender.enum";
 import {hash} from 'bcrypt'
 import { RoleEntity } from "./role.entity";
 

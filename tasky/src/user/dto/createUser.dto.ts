@@ -1,5 +1,5 @@
 import { IsEmail, IsMobilePhone, IsNotEmpty } from "class-validator";
-import { GenderEnum } from "../models/gender.enum";
+import { GenderEnum } from "../types/gender.enum";
 import { RoleEntity } from "../models/role.entity";
 
 export class CreateUserDto{
