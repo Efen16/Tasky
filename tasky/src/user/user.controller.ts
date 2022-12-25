@@ -26,17 +26,6 @@ export class UserController {
         
     }
 
-    // @Roles(RoleNameEnum.ADMIN, RoleNameEnum.MANAGER)
-
-    // @UseGuards(JwtAuthGuard, RolesGuard)
-    // @Get()
-    // async getUser(@Request() req){
-    //     console.log(req.user);
-    // }
-
-   
-
-
 
 
 }

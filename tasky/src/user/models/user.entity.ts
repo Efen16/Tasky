@@ -1,7 +1,8 @@
-import { BeforeInsert, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { GenderEnum } from "../types/gender.enum";
 import {hash} from 'bcrypt'
 import { RoleEntity } from "./role.entity";
+import { TasksEntity } from "src/tasks/models/tasks.entity";
 
 @Entity("Users")
 export class UserEntity{
@@ -29,6 +30,12 @@ export class UserEntity{
     
     @ManyToOne(()=>RoleEntity, (role)=>role.users)
     role: RoleEntity
+
+    @OneToMany(() => TasksEntity, (tasks) => tasks.asignee, { nullable: true })
+    tasks: TasksEntity[]
+
+    @OneToMany(() => TasksEntity, (createdTasks)=>createdTasks.createdBy, {nullable:true})
+    createdTasks: TasksEntity[]
 
     @BeforeInsert()
     async hashPassword(){
