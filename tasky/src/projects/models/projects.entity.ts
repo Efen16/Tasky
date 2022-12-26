@@ -9,13 +9,13 @@ export class ProjectsEntity{
 
     @OneToOne(()=>UserEntity)
     @JoinColumn()
-    managerId:UserEntity
+    manager:UserEntity
 
     @ManyToMany(()=>UserEntity)
     @JoinTable()
     users: UserEntity[];
 
-    @Column()
+    @Column({unique: true})
     name: string;
 
     @OneToMany(() => TasksEntity, (tasks)=> tasks.project)

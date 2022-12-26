@@ -1,15 +1,14 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, TreeLevelColumn } from 'typeorm';
 import { CreateUserDto } from './dto/createUser.dto';
 import { RoleEntity } from './models/role.entity';
 import { UserEntity } from './models/user.entity';
-import {sign} from 'jsonwebtoken'
-
 import { Http2ServerRequest } from 'http2';
 import { LoginUserDto } from './dto/loginUser.dto';
 import {compare} from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
+
 
 @Injectable()
 export class UserService {
@@ -86,7 +85,21 @@ export class UserService {
         return this.buildUserResponse(user);
     }
 
+    async getUserById(id){
+        const user = this.userRepository.findOne({
+            where:{
+                id:id
+            }
+        })
+    
+        if(!user){
+            throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+        }
 
+        return user;
+    
+    
+    }
 
 
 }

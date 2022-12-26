@@ -27,7 +27,7 @@ export class TasksEntity{
     @ManyToOne(()=>UserEntity, (createdBy)=>createdBy.tasks)
     createdBy: UserEntity
 
-    @ManyToOne(()=>ProjectsEntity, (project) => project.tasks)
+    @ManyToOne(()=>ProjectsEntity, (project) => project.tasks, {cascade:true})
     project: ProjectsEntity;
 
 

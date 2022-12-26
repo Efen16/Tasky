@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards, UsePipes, ValidationPipe, Request } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, UsePipes, ValidationPipe, Request, Param, ParseIntPipe } from '@nestjs/common';
 import { Roles } from './decorators/roles.decorator';
 import { CreateUserDto } from './dto/createUser.dto';
 import { LoginUserDto } from './dto/loginUser.dto';
@@ -24,6 +24,14 @@ export class UserController {
     async login(@Body() loginUserDto: LoginUserDto):Promise<string>{
         return await this.userService.login(loginUserDto);
         
+    }
+
+
+    @Roles(RoleNameEnum.ADMIN)
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Get('users/:id')
+    async getUserById(@Param('id', ParseIntPipe) id:number){
+        return await this.userService.getUserById(id);
     }
 
 
