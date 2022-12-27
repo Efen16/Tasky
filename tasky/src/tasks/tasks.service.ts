@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { ProjectsEntity } from 'src/projects/models/projects.entity';
 import { UserEntity } from 'src/user/models/user.entity';
+import { RoleNameEnum } from 'src/user/types/role.enum';
 import { Repository } from 'typeorm';
 import { CreateTaskDto } from './dto/createTask.dto';
 import { UpdateTaskDto } from './dto/updateTasks.dto';
@@ -16,7 +17,8 @@ export class TasksService {
         @InjectRepository(UserEntity)
         private readonly userRepository: Repository<UserEntity>,
         @InjectRepository(ProjectsEntity)
-        private readonly projectRepository: Repository<ProjectsEntity>
+        private readonly projectRepository: Repository<ProjectsEntity>,
+
     ){}
 
 
@@ -39,7 +41,7 @@ export class TasksService {
                 throw new HttpException("User to whom taks is assigned doesn't exist", HttpStatus.NOT_FOUND);
             }
 
-            newTask.asignee = assignedUser;
+            newTask.assignee = assignedUser;
         }
 
         if(createTaskDto.project_id){
@@ -48,17 +50,24 @@ export class TasksService {
                 throw new HttpException("Project doesn't exist", HttpStatus.NOT_FOUND);
             }
 
+     
             newTask.project = project;
+           
+            this.projectRepository.save(project);
         }
-
+        
         return await this.taskRepository.save(newTask);
     }
 
-    async updateTask(taskId:number, updateTaskDto: UpdateTaskDto){
+    async updateTask(user,taskId:number, updateTaskDto: UpdateTaskDto){
         if(updateTaskDto.title){
             if(await this.titleTakenByAnotherTask(updateTaskDto.title,taskId)){
                 throw new HttpException("Title has been already taken by another task", HttpStatus.UNPROCESSABLE_ENTITY);
             }
+        }
+
+        if(user.role != RoleNameEnum.ADMIN){
+            await this.isAssignedToProject(user.id,taskId);    
         }
 
         const task = await this.taskRepository.findOne({
@@ -78,7 +87,9 @@ export class TasksService {
                 throw new HttpException("User with that id doesnt exist", HttpStatus.NOT_FOUND);
             }
 
-            task.asignee = user;
+            console.log("I am here");
+            task.assignee = user;
+            
         }
 
         if(updateTaskDto.project_id){
@@ -88,19 +99,49 @@ export class TasksService {
             }
 
             task.project=project;
+         
         }
 
+        console.log(task)
         return await this.taskRepository.save(task);
     }
 
 
-    async paginate(options: IPaginationOptions): Promise<Pagination<TasksEntity>> {
-        return paginate<TasksEntity>(this.taskRepository, options);
-      }
+    async createTaskForProject(user, projectId:number, createTaskDto:CreateTaskDto){
+
+        const isAssigned = await this.projectRepository.createQueryBuilder("p")     
+                      .innerJoinAndSelect("p.users","user")
+                      .where("user.id = :id AND p.id=:project_id", {id:user.id, project_id:projectId})
+                      .getExists();
+        if(!isAssigned){
+            throw new HttpException("Cant create task for this project",HttpStatus.UNAUTHORIZED);
+        }
+
+        createTaskDto.project_id=projectId;
+        return await this.createTask(user.id,createTaskDto);
+    }
+
+
+    async paginate(options: IPaginationOptions, user): Promise<Pagination<TasksEntity>> {
+        if(user.role===RoleNameEnum.ADMIN){
+            return paginate<TasksEntity>(this.taskRepository, options);
+        }
+        //all tasks on projects that current user is assigned to
+        const tasksQuery = await this.taskRepository.createQueryBuilder("t")
+        .innerJoinAndSelect(ProjectsEntity, "p", "t.projectId=p.id")
+        .innerJoinAndSelect("p.users","user")
+        .where("user.id=:id",{id:user.id});
+        
+
+        return paginate<TasksEntity>(tasksQuery,options);
+    }
 
     
-    async deleteTask(id:number){
-        return await this.taskRepository.delete(id);
+    async deleteTask(user,taskId:number){
+        if(user.role != RoleNameEnum.ADMIN){
+            await this.isAssignedToProject(user.id,taskId);
+        }
+        return await this.taskRepository.delete(taskId);
     }
 
     
@@ -116,7 +157,8 @@ export class TasksService {
         return await  this.projectRepository.findOne({
             where:{
                 id:id
-                }});
+                }
+            });
         }
 
     async doesTitleExist(title:string): Promise<boolean>{
@@ -129,5 +171,33 @@ export class TasksService {
         return await this.taskRepository.createQueryBuilder("task")
         .where("task.title = :title AND task.id !=:id", {title: title, id:id})
         .getExists();
+
+        
     }
+
+    async isAssignedToProject(userId:number,taskId:number){
+        const isAssigned = await this.taskRepository.createQueryBuilder("t")
+                                .where("t.id=:id",{id:taskId})
+                                .innerJoinAndSelect(ProjectsEntity, "p", "t.projectId=p.id")         
+                                .innerJoinAndSelect("p.users","user","user.id=:userId",{userId:userId})
+                                .getExists();
+        
+        if(!isAssigned){
+            throw new HttpException("Cant alter this task, user not assigned to project",HttpStatus.UNAUTHORIZED);
+        }
+
+        return isAssigned
+    }
+    
+    
+    async filterProjectsTasks(options: IPaginationOptions, projectId:number, userId:number){
+        const tasksQuery = await this.taskRepository.createQueryBuilder("t")
+                            .innerJoin("t.assignee","user","user.id=:id",{id:userId})
+                            .innerJoin("t.project","project","project.id=:id",{id:projectId});
+                            
+       
+        return paginate<TasksEntity>(tasksQuery,options);
+    }
+
+    
 }

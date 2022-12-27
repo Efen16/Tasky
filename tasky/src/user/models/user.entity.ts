@@ -31,7 +31,7 @@ export class UserEntity{
     @ManyToOne(()=>RoleEntity, (role)=>role.users)
     role: RoleEntity
 
-    @OneToMany(() => TasksEntity, (tasks) => tasks.asignee, { nullable: true })
+    @OneToMany(() => TasksEntity, (tasks) => tasks.assignee, { nullable: true })
     tasks: TasksEntity[]
 
     @OneToMany(() => TasksEntity, (createdTasks)=>createdTasks.createdBy, {nullable:true})

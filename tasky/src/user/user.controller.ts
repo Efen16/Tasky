@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Post, UseGuards, UsePipes, ValidationPipe, Request, Param, ParseIntPipe } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, UsePipes, ValidationPipe, Request, Param, ParseIntPipe, Query, DefaultValuePipe, Patch, Delete } from '@nestjs/common';
+import { Pagination } from 'nestjs-typeorm-paginate';
 import { Roles } from './decorators/roles.decorator';
 import { CreateUserDto } from './dto/createUser.dto';
 import { LoginUserDto } from './dto/loginUser.dto';
+import { UpdateUserDto } from './dto/updateUser.dto';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { UserEntity } from './models/user.entity';
@@ -34,7 +36,32 @@ export class UserController {
         return await this.userService.getUserById(id);
     }
 
+    @Roles(RoleNameEnum.ADMIN)
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Get('')
+    async getUsers(
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,): Promise<Pagination<UserEntity>> {
+            limit = limit > 100 ? 100 : limit;
+            return this.userService.paginate({
+                page,
+                limit,
+            });
+    }
 
+    @Roles(RoleNameEnum.ADMIN)
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Patch('/:id')
+    async updateUser(@Param('id',ParseIntPipe) id:number, @Body() updateUserDto:UpdateUserDto){
+        return await this.userService.updateUser(id,updateUserDto);
+    }
+
+    @Roles(RoleNameEnum.ADMIN)
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Delete('/:id')
+    async deleteUser(@Param('id',ParseIntPipe) id:number){
+        return await this.userService.deleteUser(id);
+    }
 
 }
 

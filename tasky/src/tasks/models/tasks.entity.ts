@@ -11,7 +11,7 @@ export class TasksEntity{
 
     @Column({ type: "enum",
     enum: PriorityEnum,
-    default: PriorityEnum.LOW})
+    default: PriorityEnum.MEDIUM})
     priority: PriorityEnum
 
     @Column({unique: true})
@@ -23,13 +23,13 @@ export class TasksEntity{
     @Column({default: false})
     completed: boolean
 
-    @ManyToOne(()=>UserEntity, (asignee)=>asignee.tasks, {nullable:true})
-    asignee: UserEntity
+    @ManyToOne(()=>UserEntity, (asignee)=>asignee.tasks, {nullable:true, onDelete:"CASCADE"})
+    assignee: UserEntity
 
-    @ManyToOne(()=>UserEntity, (createdBy)=>createdBy.tasks)
+    @ManyToOne(()=>UserEntity, (createdBy)=>createdBy.tasks, {onDelete:"CASCADE"})
     createdBy: UserEntity
 
-    @ManyToOne(()=>ProjectsEntity, (project) => project.tasks, {cascade:true, nullable:true})
+    @ManyToOne(()=>ProjectsEntity, (project) => project.tasks, {cascade:true, nullable:true, onDelete:"CASCADE"})
     project: ProjectsEntity;
 
 

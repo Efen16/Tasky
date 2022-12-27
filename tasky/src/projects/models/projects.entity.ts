@@ -11,7 +11,7 @@ export class ProjectsEntity{
     @JoinColumn()
     manager:UserEntity
 
-    @ManyToMany(()=>UserEntity)
+    @ManyToMany(()=>UserEntity, {cascade:true})
     @JoinTable()
     users: UserEntity[];
 

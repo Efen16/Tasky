@@ -15,7 +15,7 @@ export class CreateTaskDto{
     readonly priority?: PriorityEnum
 
     @IsOptional()
-    readonly project_id?: number;
+    project_id?: number;
 
     @IsOptional()
     @IsString()

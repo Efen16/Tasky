@@ -11,6 +11,7 @@ import { Body,
          UseGuards,
          Request } from '@nestjs/common';
 import { Pagination } from 'nestjs-typeorm-paginate';
+import { CreateTaskDto } from 'src/tasks/dto/createTask.dto';
 import { Roles } from 'src/user/decorators/roles.decorator';
 import { JwtAuthGuard } from 'src/user/guards/jwt.guard';
 import { RolesGuard } from 'src/user/guards/roles.guard';
@@ -27,10 +28,10 @@ export class ProjectsController {
     @UseGuards(JwtAuthGuard,RolesGuard)
     @Post()
     async createProject(@Body() createProjectDto: CreateProjectDto){
-        return await this.projectService.createProject(createProjectDto);
-                                        
-
+        return await this.projectService.createProject(createProjectDto);                                
     }
+
+
 
     @Roles(RoleNameEnum.ADMIN)
     @UseGuards(JwtAuthGuard,RolesGuard)
@@ -49,17 +50,19 @@ export class ProjectsController {
     
     }
 
-    @Roles(RoleNameEnum.ADMIN)
-    @UseGuards(JwtAuthGuard,RolesGuard)
+    // : Promise<Pagination<ProjectsEntity>>
+
+    @UseGuards(JwtAuthGuard)
     @Get('')
     async getProjects(
+        @Request() req,
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,): Promise<Pagination<ProjectsEntity>> {
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,)  {
             limit = limit > 100 ? 100 : limit;
             return this.projectService.paginate({
                 page,
                 limit,
-            });
+            }, req.user);
     }
 
     @Roles(RoleNameEnum.ADMIN)
@@ -68,5 +71,13 @@ export class ProjectsController {
     async deleteProject(@Param('id',ParseIntPipe) id:number){
         return await this.projectService.deleteProject(id)
     }
+
+    // @Roles(RoleNameEnum.ADMIN)
+    // @UseGuards(JwtAuthGuard,RolesGuard)
+    // @Get('/:id')
+    // async readProjectWithTasks(@Param('id', ParseIntPipe) id:number){
+    //     return await this.projectService.readProjectWithTasks(id);
+    // }
+
 
 }

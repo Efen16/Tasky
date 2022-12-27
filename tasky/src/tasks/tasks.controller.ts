@@ -15,40 +15,59 @@ export class TasksController {
 
     constructor(private readonly taskService: TasksService){}
 
-    @Roles(RoleNameEnum.ADMIN)
-    @UseGuards(JwtAuthGuard,RolesGuard)
+   
+    @UseGuards(JwtAuthGuard)
     @Post()
     async createTask(@Request() req, @Body() createTaskDto: CreateTaskDto){
         return await this.taskService.createTask(req.user.id, createTaskDto)
     }
+
+    @UseGuards(JwtAuthGuard)
+    @Post("/:id")
+    async createTaskForProejct(@Request() req, @Param('id',ParseIntPipe) projectId:number, @Body() createTaskDto:CreateTaskDto){
+       return await this.taskService.createTaskForProject(req.user,projectId,createTaskDto);
+    }
     
-    @Roles(RoleNameEnum.ADMIN)
-    @UseGuards(JwtAuthGuard, RolesGuard)
+    
+    @UseGuards(JwtAuthGuard)
     @Patch('/:id')
-    async updateTask(@Param('id',ParseIntPipe) taskId:number, @Body() updateTaskDto: UpdateTaskDto){
-        return await this.taskService.updateTask(taskId,updateTaskDto);
+    async updateTask(@Request() req ,@Param('id',ParseIntPipe) taskId:number, @Body() updateTaskDto: UpdateTaskDto){
+        return await this.taskService.updateTask(req.user,taskId,updateTaskDto);
     }
 
 
-    @Roles(RoleNameEnum.ADMIN)
-    @UseGuards(JwtAuthGuard,RolesGuard)
+    
+    @UseGuards(JwtAuthGuard)
     @Get('')
     async getTasks(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,): Promise<Pagination<TasksEntity>> {
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+        @Request() req): Promise<Pagination<TasksEntity>> {
             limit = limit > 100 ? 100 : limit;
             return this.taskService.paginate({
                 page,
                 limit,
-            });
+            },req.user);
     }
 
-    @Roles(RoleNameEnum.ADMIN)
-    @UseGuards(JwtAuthGuard,RolesGuard)
+    
+    @UseGuards(JwtAuthGuard)
     @Delete('/:id')
-    async deleteTask(@Param('id',ParseIntPipe) id:number ){
-        return await this.taskService.deleteTask(id);
+    async deleteTask(@Request() req,@Param('id',ParseIntPipe) id:number ){
+        return await this.taskService.deleteTask(req.user,id);
     }
+
+   @UseGuards(JwtAuthGuard)
+   @Get('/:id')
+   async filterProjectTasks(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+                            @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+                            @Query('userId',ParseIntPipe) userId:number, @Param('id', ParseIntPipe) projectId){
+        return await this.taskService.filterProjectsTasks({
+                                                              page,
+                                                              limit,
+                                                          },projectId,userId);
+   }
+   
 
 
 }

@@ -8,6 +8,9 @@ import { Http2ServerRequest } from 'http2';
 import { LoginUserDto } from './dto/loginUser.dto';
 import {compare} from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
+import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { UpdateUserDto } from './dto/updateUser.dto';
+import { ProjectsEntity } from 'src/projects/models/projects.entity';
 
 
 @Injectable()
@@ -18,6 +21,8 @@ export class UserService {
         private readonly userRepository: Repository<UserEntity>,
         @InjectRepository(RoleEntity)
         private readonly roleRepository: Repository<RoleEntity>,
+        @InjectRepository(ProjectsEntity)
+        private readonly projectRepository: Repository<ProjectsEntity>,
         private readonly jwtService: JwtService
       ) {}
 
@@ -85,6 +90,53 @@ export class UserService {
         return this.buildUserResponse(user);
     }
 
+    async paginate(options: IPaginationOptions): Promise<Pagination<UserEntity>> {
+        const usersWithRoles = await this.userRepository.createQueryBuilder("u")
+                                                  .innerJoinAndSelect("u.role","role");
+        return paginate(usersWithRoles,options)
+    }
+
+    async updateUser(id:number, updateUserDto:UpdateUserDto){
+        if(updateUserDto.email){
+            if(await this.isEmailTakenByAnother(id,updateUserDto.email)){
+                throw new HttpException("Email already exists", HttpStatus.UNPROCESSABLE_ENTITY);
+            }
+        }
+
+        const user = await this.userRepository.findOne({
+            where:{id:id}
+        });
+
+        Object.assign(user,updateUserDto);
+        if(updateUserDto.role){
+            const role = await this.roleRepository.findOne({
+                where:{
+                    name:updateUserDto.role
+                }
+            });
+
+            user.role = role;
+        }
+            
+        if(updateUserDto.project_ids.length){
+            for(const project_id of updateUserDto.project_ids){
+                const project = await this.getProject(project_id);
+                if(!project){
+                    throw new HttpException("Project doesn't exist", HttpStatus.NOT_FOUND);
+                }
+
+                project.users.push(user);
+                this.projectRepository.save(project);
+            }
+        }
+
+        this.userRepository.save(user);
+    }
+
+    async deleteUser(id:number){
+        this.userRepository.delete(id);
+    }
+
     async getUserById(id){
         const user = this.userRepository.findOne({
             where:{
@@ -97,9 +149,24 @@ export class UserService {
         }
 
         return user;
-    
-    
     }
 
+    async isEmailTakenByAnother(id:number, email:string){
+        return await this.userRepository
+                    .createQueryBuilder("user")
+                    .where("user.email = :email AND user.id=:id",{email:email,id:id})
+                    .getExists()
+    }
+    
+    async getProject(id:number):Promise<ProjectsEntity>{
+        return await  this.projectRepository.findOne({
+            where:{
+                id:id
+                },
+            relations:{
+                users:true
+            }
+            });
+        }
 
 }
