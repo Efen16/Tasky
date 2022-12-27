@@ -6,6 +6,7 @@ import { JwtAuthGuard } from 'src/user/guards/jwt.guard';
 import { RolesGuard } from 'src/user/guards/roles.guard';
 import { RoleNameEnum } from 'src/user/types/role.enum';
 import { CreateTaskDto } from './dto/createTask.dto';
+import { FilterDto } from './dto/filter.dto';
 import { UpdateTaskDto } from './dto/updateTasks.dto';
 import { TasksEntity } from './models/tasks.entity';
 import { TasksService } from './tasks.service';
@@ -36,19 +37,28 @@ export class TasksController {
     }
 
 
+
     
     @UseGuards(JwtAuthGuard)
     @Get('')
     async getTasks(
+        
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
-        @Request() req): Promise<Pagination<TasksEntity>> {
-            limit = limit > 100 ? 100 : limit;
-            return this.taskService.paginate({
-                page,
-                limit,
-            },req.user);
+        @Query() filterDto:FilterDto,
+        @Request() req){
+            if(Object.keys(filterDto).length && req.user.role===RoleNameEnum.ADMIN){
+                return await this.taskService.filterTasks({page,limit},filterDto);
+            }else{
+                limit = limit > 100 ? 100 : limit;
+                    return this.taskService.paginate({
+                     page,
+                     limit,
+                     },
+                     req.user);
+            }
     }
+    
 
     
     @UseGuards(JwtAuthGuard)
@@ -67,7 +77,11 @@ export class TasksController {
                                                               limit,
                                                           },projectId,userId);
    }
+
+
    
+   
+
 
 
 }

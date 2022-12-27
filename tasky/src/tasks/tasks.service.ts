@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, ParseBoolPipe } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { ProjectsEntity } from 'src/projects/models/projects.entity';
@@ -6,8 +6,10 @@ import { UserEntity } from 'src/user/models/user.entity';
 import { RoleNameEnum } from 'src/user/types/role.enum';
 import { Repository } from 'typeorm';
 import { CreateTaskDto } from './dto/createTask.dto';
+import { FilterDto } from './dto/filter.dto';
 import { UpdateTaskDto } from './dto/updateTasks.dto';
 import { TasksEntity } from './models/tasks.entity';
+import { SortByPriority } from './types/sort.enum';
 
 @Injectable()
 export class TasksService {
@@ -199,5 +201,61 @@ export class TasksService {
         return paginate<TasksEntity>(tasksQuery,options);
     }
 
-    
+    async filterTasks(options: IPaginationOptions, filterDto:FilterDto){
+        let {completed,sort,assignees,title} = filterDto;
+        const comparator = ['Low', 'Medium', 'High'];
+        let tasks = await this.taskRepository.find({
+            relations:{
+                assignee:true
+            }
+        });
+   
+
+         let arr: TasksEntity[] = []
+         let tmp: TasksEntity[] = []
+               
+         if(assignees){
+            if(Array.isArray(assignees)){
+                let numberArray = assignees.map(Number);
+              
+                for(let i=0; i<numberArray.length; i++){
+                   tmp = tasks.filter(t=> t.assignee != null && t.assignee.id === numberArray[i])
+                }       
+            }else{
+                arr = tasks.filter(t=> t.assignee != null && t.assignee.id === +assignees)
+            }
+         }
+         tasks=arr;
+         tasks.forEach(t => delete t.assignee)
+         
+  
+         
+        if(completed === 'true'){
+            tasks =tasks.filter(t =>
+                t.completed === true
+            );
+        }
+
+        if(completed==='false'){
+            tasks = tasks.filter(t =>!t.completed);
+        }
+        console.log(tasks);
+        if(sort === SortByPriority.ASCENDING){
+            
+            tasks.sort((x, y) => comparator.indexOf(x.priority) - comparator.indexOf(y.priority));
+        }
+        if(sort===SortByPriority.DESCENDING){
+            tasks.sort((x, y) => comparator.indexOf(y.priority) - comparator.indexOf(x.priority));
+        }
+
+        if(title){
+            tasks = tasks.filter(t=>t.title===title);
+        }
+
+      
+        let skip = (+options.page-1)*(+options.limit);
+        let limit = (+options.page)*(+options.limit);
+        return tasks.slice(skip,limit);
+       
+    }
 }

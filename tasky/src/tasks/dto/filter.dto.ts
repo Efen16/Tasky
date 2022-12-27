@@ -1,19 +1,18 @@
-import { IsArray, IsBoolean, IsOptional, IsString } from "class-validator";
+import { ParseBoolPipe } from "@nestjs/common";
+import { IsArray, IsBoolean, isNumber, IsNumber, IsOptional, IsString } from "class-validator";
 import { SortByPriority } from "../types/sort.enum";
 
 export class FilterDto{
-    @IsArray()
+    
     @IsOptional()
-    private readonly assignees?: number[];
+    assignees?;
 
     @IsOptional()
-    @IsBoolean()
-    private readonly completed?: boolean;
+    completed?: string;
 
     @IsOptional()
-    @IsString()
-    private readonly name?: string
+     title?: string
 
     @IsOptional()
-    private readonly sort?: SortByPriority
+    sort?: SortByPriority
 }
