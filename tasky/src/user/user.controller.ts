@@ -9,23 +9,21 @@ import { RolesGuard } from './guards/roles.guard';
 import { UserEntity } from './models/user.entity';
 import { RoleNameEnum } from './types/role.enum';
 import { UserService } from './user.service';
-
 @Controller()
 export class UserController {
 
     constructor(private readonly userService: UserService){}
 
-    @Post("signup")
+    @Post("auth/signup")
     @UsePipes(new ValidationPipe())
     async createUser(@Body() createUserDto:CreateUserDto): Promise<string>{
         return await this.userService.createUser(createUserDto);
     }
 
-    @Post("login")
+    @Post("auth/signin")
     @UsePipes(new ValidationPipe())
     async login(@Body() loginUserDto: LoginUserDto):Promise<string>{
         return await this.userService.login(loginUserDto);
-        
     }
 
 
@@ -38,7 +36,7 @@ export class UserController {
 
     @Roles(RoleNameEnum.ADMIN)
     @UseGuards(JwtAuthGuard,RolesGuard)
-    @Get('')
+    @Get('users')
     async getUsers(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,): Promise<Pagination<UserEntity>> {
@@ -51,14 +49,14 @@ export class UserController {
 
     @Roles(RoleNameEnum.ADMIN)
     @UseGuards(JwtAuthGuard,RolesGuard)
-    @Patch('/:id')
+    @Patch('users/:id')
     async updateUser(@Param('id',ParseIntPipe) id:number, @Body() updateUserDto:UpdateUserDto){
         return await this.userService.updateUser(id,updateUserDto);
     }
 
     @Roles(RoleNameEnum.ADMIN)
     @UseGuards(JwtAuthGuard,RolesGuard)
-    @Delete('/:id')
+    @Delete('users/:id')
     async deleteUser(@Param('id',ParseIntPipe) id:number){
         return await this.userService.deleteUser(id);
     }

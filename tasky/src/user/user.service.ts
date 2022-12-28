@@ -43,14 +43,19 @@ export class UserService {
         }
 
         //TO DO SEED AND MIGRATIONS
-        // Potential error if role relation is not already seeded
         const role = await this.roleRepository.findOne({
             where:{
                 id:roleId
             }
         });
+        
+        if(!role){
+            throw new HttpException("There are no roles in db, currently need to be added mannualy",HttpStatus.NOT_IMPLEMENTED);
+        }
         newUser.role = role;
         
+
+
         const user = await this.userRepository.save(newUser);
         return this.buildUserResponse(user);
     }
@@ -118,16 +123,18 @@ export class UserService {
             user.role = role;
         }
             
-        if(updateUserDto.project_ids.length){
-            for(const project_id of updateUserDto.project_ids){
-                const project = await this.getProject(project_id);
-                if(!project){
-                    throw new HttpException("Project doesn't exist", HttpStatus.NOT_FOUND);
-                }
+        if(updateUserDto.project_ids){
+            if(updateUserDto.project_ids.length){
+                for(const project_id of updateUserDto.project_ids){
+                    const project = await this.getProject(project_id);
+                    if(!project){
+                        throw new HttpException("Project doesn't exist", HttpStatus.NOT_FOUND);
+                    }
 
-                project.users.push(user);
-                this.projectRepository.save(project);
-            }
+                    project.users.push(user);
+                    this.projectRepository.save(project);
+                }
+            }    
         }
 
         this.userRepository.save(user);

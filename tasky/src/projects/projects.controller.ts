@@ -9,7 +9,9 @@ import { Body,
          Post, 
          Query, 
          UseGuards,
-         Request } from '@nestjs/common';
+         Request, 
+         ValidationPipe,
+         UsePipes} from '@nestjs/common';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { CreateTaskDto } from 'src/tasks/dto/createTask.dto';
 import { Roles } from 'src/user/decorators/roles.decorator';
@@ -20,6 +22,11 @@ import { CreateProjectDto } from './dto/create.project.dto';
 import { ProjectsEntity } from './models/projects.entity';
 import { ProjectsService } from './projects.service';
 
+@UsePipes(new ValidationPipe({
+    whitelist:true,
+    forbidNonWhitelisted:true,
+    forbidUnknownValues: true
+}))
 @Controller('projects')
 export class ProjectsController {
     constructor(private readonly projectService: ProjectsService){}
@@ -50,8 +57,6 @@ export class ProjectsController {
     
     }
 
-    // : Promise<Pagination<ProjectsEntity>>
-
     @UseGuards(JwtAuthGuard)
     @Get('')
     async getProjects(
@@ -71,13 +76,6 @@ export class ProjectsController {
     async deleteProject(@Param('id',ParseIntPipe) id:number){
         return await this.projectService.deleteProject(id)
     }
-
-    // @Roles(RoleNameEnum.ADMIN)
-    // @UseGuards(JwtAuthGuard,RolesGuard)
-    // @Get('/:id')
-    // async readProjectWithTasks(@Param('id', ParseIntPipe) id:number){
-    //     return await this.projectService.readProjectWithTasks(id);
-    // }
 
 
 }

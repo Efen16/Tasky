@@ -193,12 +193,14 @@ export class TasksService {
     
     
     async filterProjectsTasks(options: IPaginationOptions, projectId:number, userId:number){
+        console.log(userId);
         const tasksQuery = await this.taskRepository.createQueryBuilder("t")
-                            .innerJoin("t.assignee","user","user.id=:id",{id:userId})
-                            .innerJoin("t.project","project","project.id=:id",{id:projectId});
-                            
+                            .where("t.projectId=:projectId",{projectId})
+                            .innerJoin("t.assignee","user","user.id=:userId",{userId:userId});
+
+
        
-        return paginate<TasksEntity>(tasksQuery,options);
+      return paginate<TasksEntity>(tasksQuery,options);
     }
 
     async filterTasks(options: IPaginationOptions, filterDto:FilterDto){

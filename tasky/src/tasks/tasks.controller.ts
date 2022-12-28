@@ -1,4 +1,4 @@
-import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, Request, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { Roles } from 'src/user/decorators/roles.decorator';
@@ -16,20 +16,33 @@ export class TasksController {
 
     constructor(private readonly taskService: TasksService){}
 
-   
-    @UseGuards(JwtAuthGuard)
+    @UsePipes(new ValidationPipe({
+        whitelist:true,
+        forbidNonWhitelisted:true,
+        forbidUnknownValues: true
+    }))
+    @Roles(RoleNameEnum.ADMIN)
+    @UseGuards(JwtAuthGuard,RolesGuard)
     @Post()
     async createTask(@Request() req, @Body() createTaskDto: CreateTaskDto){
         return await this.taskService.createTask(req.user.id, createTaskDto)
     }
-
+    @UsePipes(new ValidationPipe({
+        whitelist:true,
+        forbidNonWhitelisted:true,
+        forbidUnknownValues: true
+    }))
     @UseGuards(JwtAuthGuard)
     @Post("/:id")
     async createTaskForProejct(@Request() req, @Param('id',ParseIntPipe) projectId:number, @Body() createTaskDto:CreateTaskDto){
        return await this.taskService.createTaskForProject(req.user,projectId,createTaskDto);
     }
     
-    
+    @UsePipes(new ValidationPipe({
+        whitelist:true,
+        forbidNonWhitelisted:true,
+        forbidUnknownValues: true
+    }))
     @UseGuards(JwtAuthGuard)
     @Patch('/:id')
     async updateTask(@Request() req ,@Param('id',ParseIntPipe) taskId:number, @Body() updateTaskDto: UpdateTaskDto){
@@ -42,7 +55,6 @@ export class TasksController {
     @UseGuards(JwtAuthGuard)
     @Get('')
     async getTasks(
-        
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
         @Query() filterDto:FilterDto,
@@ -60,13 +72,22 @@ export class TasksController {
     }
     
 
-    
+    @UsePipes(new ValidationPipe({
+        whitelist:true,
+        forbidNonWhitelisted:true,
+        forbidUnknownValues: true
+    }))
     @UseGuards(JwtAuthGuard)
     @Delete('/:id')
     async deleteTask(@Request() req,@Param('id',ParseIntPipe) id:number ){
         return await this.taskService.deleteTask(req.user,id);
     }
 
+    @UsePipes(new ValidationPipe({
+        whitelist:true,
+        forbidNonWhitelisted:true,
+        forbidUnknownValues: true
+    }))
    @UseGuards(JwtAuthGuard)
    @Get('/:id')
    async filterProjectTasks(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,

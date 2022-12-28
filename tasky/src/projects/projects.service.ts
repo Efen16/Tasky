@@ -115,8 +115,8 @@ export class ProjectsService {
     async paginate(options: IPaginationOptions, user):Promise<Pagination<ProjectsEntity>>  {
         if(RoleNameEnum.ADMIN===user.role){
             const projectAndUsers =  this.projectRepository.createQueryBuilder("p")
-                                    .innerJoinAndSelect("p.users","user")
-                                    .innerJoinAndSelect("user.role","role");
+                                    .leftJoinAndSelect("p.users","user")
+                                    .leftJoinAndSelect("user.role","role");
             return paginate(projectAndUsers,options);
         }
 
