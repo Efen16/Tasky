@@ -7,7 +7,7 @@ import { TasksService } from 'src/tasks/tasks.service';
 
 import { UserEntity } from 'src/user/models/user.entity';
 import { RoleNameEnum } from 'src/user/types/role.enum';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { CreateProjectDto } from './dto/create.project.dto';
 import { ProjectsEntity } from './models/projects.entity';
 
@@ -26,7 +26,7 @@ export class ProjectsService {
     ){}
 
 
-    async createProject(createProjectDto:CreateProjectDto){
+    async createProject(createProjectDto:CreateProjectDto):Promise<ProjectsEntity>{
         const newProject:ProjectsEntity = new ProjectsEntity();
         const nameTaken = await this.projectRepository 
                               .createQueryBuilder("project")
@@ -45,19 +45,16 @@ export class ProjectsService {
         }
 
         const manager = await this.getManager(createProjectDto.managerId);
-        if(!manager){
-            throw new HttpException("User with that id either doesnt exist or is not manager",HttpStatus.UNPROCESSABLE_ENTITY);
-        }
-        
-        if(await this.isManagerTaken(manager.id)){
-            throw new HttpException("Manager already working on another project", HttpStatus.UNPROCESSABLE_ENTITY);
-        }
+ 
+        await this.isManagerTaken(manager.id);
+       
+        newProject.manager=manager
 
         return await this.projectRepository.save(newProject);                                  
     }
 
     
-    async updateProject(id:number, createProjectDto:CreateProjectDto){
+    async updateProject(id:number, createProjectDto:CreateProjectDto): Promise<ProjectsEntity>{
         const project = await this.projectRepository.findOne({
             where:{
                 id:id
@@ -87,9 +84,9 @@ export class ProjectsService {
             throw new HttpException("User with that id either doesnt exist or is not manager",HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
-        if(await this.isManagerTaken(manager.id)){
-                throw new HttpException("Manager already working on another project", HttpStatus.UNPROCESSABLE_ENTITY);
-            } 
+      
+        
+        await this.isManagerTaken(createProjectDto.managerId);
 
         project.manager=manager;
      
@@ -98,7 +95,7 @@ export class ProjectsService {
     }
 
 
-    async updateProjectAsManager(managerId:number,createProjectDto:CreateProjectDto){
+    async updateProjectAsManager(managerId:number,createProjectDto:CreateProjectDto):Promise<UpdateResult>{
         
         if(await this.isNameTakenByOtherProject(createProjectDto.name,managerId)){
             throw new HttpException("New name already exists", HttpStatus.UNPROCESSABLE_ENTITY);
@@ -129,29 +126,40 @@ export class ProjectsService {
     }                                   
 
 
-    async deleteProject(id:number){
+    async deleteProject(id:number):Promise<DeleteResult>{
         return await this.projectRepository.delete(id);
     }
 
 
     //checks if manager is already assigned to another project
-    async isManagerTaken(id:number):Promise<boolean>{
-        return await this.projectRepository
+    async isManagerTaken(id:number):Promise<void>{
+       const isTaken = await this.projectRepository
                          .createQueryBuilder("project")
                          .where("project.managerId = :id", {id:id})
                          .getExists();
+        if(isTaken){
+            throw new HttpException("Manager already working on another project", HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+       
     }
 
 
     async getManager(id:number):Promise<UserEntity>{
-        return await this.userRepository
+        const manager = await this.userRepository
                          .createQueryBuilder("user")
                          .where("user.id=:id AND user.roleId=:manager",{id:id,manager:2})
                          .getOne();
+        
+        if(!manager){
+            throw new HttpException("User with that id either doesnt exist or is not manager",HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        return manager;
     }
 
 
-    async isNameTakenByOtherProject(name:string, id:number){
+    async isNameTakenByOtherProject(name:string, id:number):Promise<boolean>{
         return await this.projectRepository
                          .createQueryBuilder("project")
                          .where("project.name=:name AND project.id !=:id",{name:name,id:id})

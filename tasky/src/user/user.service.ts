@@ -69,7 +69,6 @@ export class UserService {
     buildUserResponse(user: UserEntity): string {
         return this.jwtService.sign({
             sub: user.id,
-            role: user.role.name
         })
     }
 
@@ -175,5 +174,18 @@ export class UserService {
             }
             });
         }
+
+    async getUsersRole(id:number){
+        const role = await this.roleRepository.find({
+            relations:{
+                users:true
+            },where:{
+                users:{
+                    id:id
+                }
+            }
+        });
+        return role[0].name;
+    }
 
 }

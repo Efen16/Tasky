@@ -24,4 +24,5 @@
 | /tasks/:id              | DELETE      | ADMIN             | Deletes task with given id                                                |
 | /tasks                  | GET         | ADMIN             | Filter through tasks, PossibleQueryParams(assignees,completed,title,sort) |
 | /users                  | GET         | ADMIN             | Read all users                                                            |
+| /projects               | PATCH       | Manager           | Updates project                                                           |
 |                         |             |                   |                                                                           |
