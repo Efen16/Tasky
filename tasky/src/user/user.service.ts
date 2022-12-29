@@ -42,7 +42,6 @@ export class UserService {
             throw new HttpException("Email already exists", HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
-        //TO DO SEED AND MIGRATIONS
         const role = await this.roleRepository.findOne({
             where:{
                 id:roleId
@@ -54,18 +53,10 @@ export class UserService {
         }
         newUser.role = role;
         
-
-
         const user = await this.userRepository.save(newUser);
         return this.buildUserResponse(user);
     }
 
-
-
-    
-
-    // Idea is that front will store this token in local storage/cookie 
-    // and attach it to every request
     buildUserResponse(user: UserEntity): string {
         return this.jwtService.sign({
             sub: user.id,
@@ -80,7 +71,6 @@ export class UserService {
                      "gender","phone","email"]
          });
 
-         console.log(user);
         if(!user){
             throw new HttpException('Wrong email', HttpStatus.UNPROCESSABLE_ENTITY);
         }
@@ -94,11 +84,13 @@ export class UserService {
         return this.buildUserResponse(user);
     }
 
+
     async paginate(options: IPaginationOptions): Promise<Pagination<UserEntity>> {
         const usersWithRoles = await this.userRepository.createQueryBuilder("u")
                                                   .innerJoinAndSelect("u.role","role");
         return paginate(usersWithRoles,options)
     }
+
 
     async updateUser(id:number, updateUserDto:UpdateUserDto){
         if(updateUserDto.email){
@@ -157,6 +149,7 @@ export class UserService {
         return user;
     }
 
+
     async isEmailTakenByAnother(id:number, email:string){
         return await this.userRepository
                     .createQueryBuilder("user")
@@ -164,6 +157,7 @@ export class UserService {
                     .getExists()
     }
     
+
     async getProject(id:number):Promise<ProjectsEntity>{
         return await  this.projectRepository.findOne({
             where:{
@@ -175,6 +169,7 @@ export class UserService {
             });
         }
 
+        
     async getUsersRole(id:number){
         const role = await this.roleRepository.find({
             relations:{

@@ -20,14 +20,10 @@ export class TasksService {
         private readonly userRepository: Repository<UserEntity>,
         @InjectRepository(ProjectsEntity)
         private readonly projectRepository: Repository<ProjectsEntity>,
-
     ){}
-
 
     async createTask(createdById: number, createTaskDto: CreateTaskDto){
         
-    
-       
         if(await this.doesTitleExist(createTaskDto.title)){
             throw new HttpException("Title already taken", HttpStatus.UNPROCESSABLE_ENTITY);
         }
@@ -37,6 +33,7 @@ export class TasksService {
         Object.assign(newTask,createTaskDto);
         const creator = await this.getUser(createdById);
         newTask.createdBy = creator;
+
         if(createTaskDto.assignee_id){
             const assignedUser = await this.getUser(createTaskDto.assignee_id);
             if(!assignedUser){
@@ -52,7 +49,6 @@ export class TasksService {
                 throw new HttpException("Project doesn't exist", HttpStatus.NOT_FOUND);
             }
 
-     
             newTask.project = project;
            
             this.projectRepository.save(project);
@@ -128,13 +124,12 @@ export class TasksService {
         if(user.role===RoleNameEnum.ADMIN){
             return paginate<TasksEntity>(this.taskRepository, options);
         }
-        //all tasks on projects that current user is assigned to
+
         const tasksQuery = await this.taskRepository.createQueryBuilder("t")
         .innerJoinAndSelect(ProjectsEntity, "p", "t.projectId=p.id")
         .innerJoinAndSelect("p.users","user")
         .where("user.id=:id",{id:user.id});
         
-
         return paginate<TasksEntity>(tasksQuery,options);
     }
 
@@ -163,27 +158,27 @@ export class TasksService {
             });
         }
 
+
     async doesTitleExist(title:string): Promise<boolean>{
         return await this.taskRepository.createQueryBuilder("task")
         .where("task.title = :title", {title: title})
         .getExists();
     }
 
+
     async titleTakenByAnotherTask(title:string, id:number):Promise<boolean>{
         return await this.taskRepository.createQueryBuilder("task")
         .where("task.title = :title AND task.id !=:id", {title: title, id:id})
         .getExists();
-
-        
     }
+
 
     async isAssignedToProject(userId:number,taskId:number){
         const isAssigned = await this.taskRepository.createQueryBuilder("t")
                                 .where("t.id=:id",{id:taskId})
                                 .innerJoinAndSelect(ProjectsEntity, "p", "t.projectId=p.id")         
                                 .innerJoinAndSelect("p.users","user","user.id=:userId",{userId:userId})
-                                .getExists();
-        
+                                .getExists();        
         if(!isAssigned){
             throw new HttpException("Cant alter this task, user not assigned to project",HttpStatus.UNAUTHORIZED);
         }
@@ -198,8 +193,6 @@ export class TasksService {
                             .where("t.projectId=:projectId",{projectId})
                             .innerJoin("t.assignee","user","user.id=:userId",{userId:userId});
 
-
-       
       return paginate<TasksEntity>(tasksQuery,options);
     }
 
@@ -211,7 +204,6 @@ export class TasksService {
                 assignee:true
             }
         });
-   
 
          let arr: TasksEntity[] = []
          let tmp: TasksEntity[] = []
@@ -229,9 +221,7 @@ export class TasksService {
          }
          tasks=arr;
          tasks.forEach(t => delete t.assignee)
-         
-  
-         
+               
         if(completed === 'true'){
             tasks =tasks.filter(t =>
                 t.completed === true
@@ -254,7 +244,6 @@ export class TasksService {
             tasks = tasks.filter(t=>t.title===title);
         }
 
-      
         let skip = (+options.page-1)*(+options.limit);
         let limit = (+options.page)*(+options.limit);
         return tasks.slice(skip,limit);

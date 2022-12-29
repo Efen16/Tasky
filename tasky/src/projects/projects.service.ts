@@ -1,10 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { CreateTaskDto } from 'src/tasks/dto/createTask.dto';
 import { TasksEntity } from 'src/tasks/models/tasks.entity';
-import { TasksService } from 'src/tasks/tasks.service';
-
 import { UserEntity } from 'src/user/models/user.entity';
 import { RoleNameEnum } from 'src/user/types/role.enum';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
@@ -21,8 +18,6 @@ export class ProjectsService {
         private readonly userRepository: Repository<UserEntity>,
         @InjectRepository(TasksEntity)
         private readonly taskRepository: Repository<TasksEntity>,
-        private readonly taskService: TasksService
-     
     ){}
 
 
@@ -38,7 +33,6 @@ export class ProjectsService {
         }
 
         newProject.name = createProjectDto.name;
-        newProject.tasks=[];
         
         if(!createProjectDto.managerId){
             return await this.projectRepository.save(newProject)
@@ -83,14 +77,11 @@ export class ProjectsService {
         if(!manager){
             throw new HttpException("User with that id either doesnt exist or is not manager",HttpStatus.UNPROCESSABLE_ENTITY);
         }
-
-      
-        
+ 
         await this.isManagerTaken(createProjectDto.managerId);
 
         project.manager=manager;
      
-    
         return await this.projectRepository.save(project);
     }
 
@@ -106,9 +97,9 @@ export class ProjectsService {
                     .set( {name: createProjectDto.name })
                     .where("managerId = :id", {id:managerId})
                     .execute();
+     }
     
-    }
-    
+
     async paginate(options: IPaginationOptions, user):Promise<Pagination<ProjectsEntity>>  {
         if(RoleNameEnum.ADMIN===user.role){
             const projectAndUsers =  this.projectRepository.createQueryBuilder("p")
@@ -120,9 +111,8 @@ export class ProjectsService {
         const projectAndUsers = this.projectRepository.createQueryBuilder("p")
                                         .innerJoinAndSelect("p.users","users")
                                         .where("users.id=:id",{id:user.id})
-                                        
-        
-            return paginate(projectAndUsers,options);
+                                               
+        return paginate(projectAndUsers,options);
     }                                   
 
 
@@ -131,7 +121,6 @@ export class ProjectsService {
     }
 
 
-    //checks if manager is already assigned to another project
     async isManagerTaken(id:number):Promise<void>{
        const isTaken = await this.projectRepository
                          .createQueryBuilder("project")
@@ -144,7 +133,7 @@ export class ProjectsService {
        
     }
 
-
+    
     async getManager(id:number):Promise<UserEntity>{
         const manager = await this.userRepository
                          .createQueryBuilder("user")
