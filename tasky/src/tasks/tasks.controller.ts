@@ -57,7 +57,7 @@ export class TasksController {
     async getTasks(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
         @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
-        @Query() filterDto:FilterDto,
+        @Query(new ValidationPipe({transform:true})) filterDto:FilterDto,
         @Request() req){
             if(Object.keys(filterDto).length && req.user.role===RoleNameEnum.ADMIN){
                 return await this.taskService.filterTasks({page,limit},filterDto);
