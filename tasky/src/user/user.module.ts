@@ -11,7 +11,7 @@ import { ProjectsEntity } from 'src/projects/models/projects.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity, RoleEntity, ProjectsEntity]),PassportModule, JwtModule.register({
-    secret: "shhsecret"
+    secret: process.env.SECRET
   }) ],
   providers: [UserService, JwtStrategy],
   controllers: [UserController]
