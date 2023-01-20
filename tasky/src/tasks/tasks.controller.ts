@@ -1,4 +1,6 @@
-import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, Request, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe,
+         Patch, Post, Query, Request, UseGuards, UsePipes, ValidationPipe,
+          UseInterceptors, CacheInterceptor, CacheTTL } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Pagination } from 'nestjs-typeorm-paginate';
 import { Roles } from 'src/user/decorators/roles.decorator';
@@ -10,6 +12,8 @@ import { FilterDto } from './dto/filter.dto';
 import { UpdateTaskDto } from './dto/updateTasks.dto';
 import { TasksEntity } from './models/tasks.entity';
 import { TasksService } from './tasks.service';
+
+
 
 @Controller('tasks')
 export class TasksController {
@@ -51,8 +55,10 @@ export class TasksController {
 
 
 
-    
+   
     @UseGuards(JwtAuthGuard)
+    @UseInterceptors(CacheInterceptor)
+    @CacheTTL(20)
     @Get('')
     async getTasks(
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
