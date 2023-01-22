@@ -2,7 +2,8 @@ import { BeforeInsert, Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedCol
 import { GenderEnum } from "../types/gender.enum";
 import {hash} from 'bcrypt'
 import { RoleEntity } from "./role.entity";
-import { TasksEntity } from "src/tasks/models/tasks.entity";
+import { TasksEntity } from "../../tasks/models/tasks.entity";
+
 
 @Entity("Users")
 export class UserEntity{

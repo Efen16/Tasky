@@ -10,7 +10,7 @@ import {compare} from 'bcrypt'
 import { JwtService } from '@nestjs/jwt';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { UpdateUserDto } from './dto/updateUser.dto';
-import { ProjectsEntity } from 'src/projects/models/projects.entity';
+import { ProjectsEntity } from '../projects/models/projects.entity';
 
 
 @Injectable()
@@ -132,7 +132,7 @@ export class UserService {
     }
 
     async deleteUser(id:number){
-        this.userRepository.delete(id);
+        return this.userRepository.delete(id);
     }
 
     async getUserById(id){

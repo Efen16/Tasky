@@ -1,5 +1,5 @@
-import { ProjectsEntity } from "src/projects/models/projects.entity";
-import { UserEntity } from "src/user/models/user.entity";
+import { ProjectsEntity } from "../../projects/models/projects.entity";
+import { UserEntity } from "../../user/models/user.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Unique } from "typeorm";
 import { PriorityEnum } from "../types/priority.enum";
 
