@@ -132,7 +132,7 @@ export class UserService {
     }
 
     async deleteUser(id:number){
-        return this.userRepository.delete(id);
+        this.userRepository.delete(id);
     }
 
     async getUserById(id){

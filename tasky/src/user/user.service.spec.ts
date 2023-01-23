@@ -1,18 +1,20 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import exp from "constants";
 import { ProjectsEntity } from "../projects/models/projects.entity";
-import { Any, Repository } from "typeorm";
+import { Repository, SelectQueryBuilder } from "typeorm";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { RoleEntity } from "./models/role.entity";
 import { UserEntity } from "./models/user.entity";
 import { GenderEnum } from "./types/gender.enum";
 import { RoleNameEnum } from "./types/role.enum";
 import { UserService } from "./user.service";
-import { JwtModule, JwtService } from "@nestjs/jwt";
-import { HttpException, HttpStatus, UnprocessableEntityException } from "@nestjs/common";
+import { JwtModule } from "@nestjs/jwt";
+import { HttpException, HttpStatus } from "@nestjs/common";
 import {hash} from 'bcrypt'
-import { SlowBuffer } from "buffer";
+import { IPaginationOptions, paginate, Pagination } from "nestjs-typeorm-paginate";
+import { LoginUserDto } from "./dto/loginUser.dto";
+import { resolve } from "path";
+import { UpdateUserDto } from "./dto/updateUser.dto";
 
 const oneUser: CreateUserDto = {
     firstName: 'Test',
@@ -60,6 +62,10 @@ describe('UserService', () => {
                     useValue: {
                         findOne: jest.fn(),
                         save: jest.fn(),
+                        createQueryBuilder: jest.fn(()=>({
+                             innerJoinAndSelect: jest.fn().mockReturnThis(),
+                        
+                     })),
                     }
                 },
                 {
@@ -126,4 +132,19 @@ describe('UserService', () => {
     })
 
 
-})
+    describe("should update user", ()=> {
+
+        it('should throw error because email already exists', async ()=>{
+            const updateUser: UpdateUserDto = {
+                email: "test@gmail.com",
+                phone: "0603925841"
+            }
+
+            jest.spyOn(userService,'isEmailTakenByAnother').mockImplementation(async ()=> await true);
+
+            expect(userService.updateUser(1,updateUser)).rejects.toThrow(new HttpException("Email already exists", HttpStatus.UNPROCESSABLE_ENTITY))
+            
+        })
+
+    })
+});
