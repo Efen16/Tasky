@@ -15,6 +15,8 @@ import { IPaginationOptions, paginate, Pagination } from "nestjs-typeorm-paginat
 import { LoginUserDto } from "./dto/loginUser.dto";
 import { resolve } from "path";
 import { UpdateUserDto } from "./dto/updateUser.dto";
+import { getMaxListeners } from "process";
+import exp from "constants";
 
 const oneUser: CreateUserDto = {
     firstName: 'Test',
@@ -146,5 +148,51 @@ describe('UserService', () => {
             
         })
 
+        it('should succesfuly update the user role', async ()=> {
+            const newRole: RoleEntity = new RoleEntity();
+            newRole.id=3;
+            newRole.name = RoleNameEnum.ADMIN;
+            const updateUser:UpdateUserDto = {
+                role: RoleNameEnum.ADMIN
+
+                
+            }
+
+            jest.spyOn(userService, 'isEmailTakenByAnother').mockResolvedValue(false);
+            jest.spyOn(userRepository, 'findOne').mockResolvedValue(userEntity);
+            jest.spyOn(roleRepository, 'findOne').mockResolvedValue(newRole);
+            jest.spyOn(userRepository,'save').mockResolvedValue(userEntity);
+            expect(userService.updateUser(1,updateUser)).resolves.toEqual({
+                email:userEntity.email,
+                firstName: userEntity.firstName,
+                lastName: userEntity.lastName,
+                role: newRole,
+                gender: userEntity.gender,
+                password: userEntity.password,
+                id:userEntity.id,
+                tasks:userEntity.tasks
+            });         
+            
+        })
+
+    })
+
+    describe('should get one user', ()=> {
+        it('should throw error because user cant be found', ()=>{
+            jest.spyOn(userRepository,'findOne').mockResolvedValue(null);
+            expect(userService.getUserById(expect.any(Number))).rejects.toThrow(new HttpException("User not found", HttpStatus.NOT_FOUND));
+        });
+
+        it('should return a user', ()=> {
+            jest.spyOn(userRepository,'findOne').mockResolvedValue(userEntity);
+            expect(userService.getUserById(1)).resolves.toEqual(userEntity);
+        });
+    })
+
+    describe('should get user role', ()=> {
+        it('should return role name', async ()=>{
+            jest.spyOn(roleRepository,'findOne').mockResolvedValue(roleEntity);
+            expect(userService.getUsersRole(1)).resolves.toEqual(roleEntity.name);
+        })
     })
 });

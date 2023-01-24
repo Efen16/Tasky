@@ -128,7 +128,7 @@ export class UserService {
             }    
         }
 
-        this.userRepository.save(user);
+        return this.userRepository.save(user);
     }
 
     async deleteUser(id:number){
@@ -136,12 +136,12 @@ export class UserService {
     }
 
     async getUserById(id){
-        const user = this.userRepository.findOne({
+        const user = await this.userRepository.findOne({
             where:{
                 id:id
             }
         })
-    
+        
         if(!user){
             throw new HttpException("User not found", HttpStatus.NOT_FOUND);
         }
@@ -171,7 +171,7 @@ export class UserService {
 
         
     async getUsersRole(id:number){
-        const role = await this.roleRepository.find({
+        const role = await this.roleRepository.findOne({
             relations:{
                 users:true
             },where:{
@@ -180,7 +180,7 @@ export class UserService {
                 }
             }
         });
-        return role[0].name;
+        return role.name;
     }
 
 }
