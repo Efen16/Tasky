@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { TasksEntity } from 'src/tasks/models/tasks.entity';
-import { UserEntity } from 'src/user/models/user.entity';
-import { RoleNameEnum } from 'src/user/types/role.enum';
+import { TasksEntity } from '../tasks/models/tasks.entity';
+import { UserEntity } from '../user/models/user.entity';
+import { RoleNameEnum } from '../user/types/role.enum';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { CreateProjectDto } from './dto/create.project.dto';
 import { ProjectsEntity } from './models/projects.entity';

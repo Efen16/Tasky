@@ -12,14 +12,11 @@ import { Body,
          Request, 
          ValidationPipe,
          UsePipes} from '@nestjs/common';
-import { Pagination } from 'nestjs-typeorm-paginate';
-import { CreateTaskDto } from 'src/tasks/dto/createTask.dto';
-import { Roles } from 'src/user/decorators/roles.decorator';
-import { JwtAuthGuard } from 'src/user/guards/jwt.guard';
-import { RolesGuard } from 'src/user/guards/roles.guard';
-import { RoleNameEnum } from 'src/user/types/role.enum';
+import { Roles } from '../user/decorators/roles.decorator';
+import { JwtAuthGuard } from '../user/guards/jwt.guard';
+import { RolesGuard } from '../user/guards/roles.guard';
+import { RoleNameEnum } from '../user/types/role.enum';
 import { CreateProjectDto } from './dto/create.project.dto';
-import { ProjectsEntity } from './models/projects.entity';
 import { ProjectsService } from './projects.service';
 
 @UsePipes(new ValidationPipe({
