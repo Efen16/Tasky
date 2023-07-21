@@ -25,4 +25,4 @@ jobs:
             - name: tests
               run: npm run test
             - name: test-cov
-              uses: npm run test:cov
+              run: npm run test:cov
